@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id("com.github.triplet.play") version "3.6.0"
 }
 
 android {
@@ -11,7 +12,7 @@ android {
         minSdk 21
         targetSdk 31
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -23,6 +24,32 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            Properties properties = new Properties()
+            if (project.rootProject.file('local.properties').canRead()) {
+                properties.load(project.rootProject.file('local.properties').newDataInputStream())
+            }
+
+            def PUBLISH_KEY_FILE = properties.getProperty('PUBLISH_KEY_FILE')
+            def RELEASE_STORE_FILE = properties.getProperty('RELEASE_STORE_FILE')
+            def RELEASE_STORE_PASSWORD = properties.getProperty('RELEASE_STORE_PASSWORD')
+            def RELEASE_KEY_ALIAS = properties.getProperty('RELEASE_KEY_ALIAS')
+            def RELEASE_KEY_PASSWORD = properties.getProperty('RELEASE_KEY_PASSWORD')
+
+            signingConfigs {
+                release {
+                    storeFile file(RELEASE_STORE_FILE)
+                    storePassword RELEASE_STORE_PASSWORD
+                    keyAlias RELEASE_KEY_ALIAS
+                    keyPassword RELEASE_KEY_PASSWORD
+                }
+            }
+
+            play {
+                track = 'internal'//alpha/beta/production
+                serviceAccountCredentials.set(file(PUBLISH_KEY_FILE))
+                defaultToAppBundles.set(true)
+            }
         }
     }
     compileOptions {
